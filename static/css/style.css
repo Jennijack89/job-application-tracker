@@ -1,0 +1,62 @@
+/* Google Font Import code*/
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
+
+
+.google-sans-<uniquifier> {
+  font-family: "Google Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: <weight>;
+  font-style: normal;
+  font-variation-settings:
+    "GRAD" 0;
+}
+:root {
+    /* Colors */
+    --primary-color:#525AFF;
+    --secondary-color:#6D8BC0;
+    --accent-color:#4AB5B5;
+    --supporting-accent-color:#8FD9FB;
+    --background-color:#F9FAFB;
+    --text-color:#1F2937;
+    --text-color-inverse:#ffffff;
+    --text-color-error:#DC2626;
+    
+
+
+    /*typography*/
+    --font-family-base: GoogleFonts;
+    /*Colors,Fonts,Border radius,Shadows,Branding*/
+
+    /*Border*/
+    --border-radius:12px;
+
+}
+
+body{
+    background-color: var(--background-color);
+    font-family:'Google Sans', sans-serif;
+    color: var(--text-color)
+}
+
+nav{
+    background-color: var(--secondary-color);
+}
+
+.btn-primary{
+    background-color: var(--primary-color);
+    border:none;
+    border-radius: var(--border-radius);
+}
+
+.btn-primary.hover{
+    opacity: 0.9;
+}
+
+.form-control{
+    border-radius: var(--border-radius);
+    padding: 12px;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
