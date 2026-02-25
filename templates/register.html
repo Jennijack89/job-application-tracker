@@ -3,50 +3,47 @@
 {% block title %}Create Account{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <header>
-        <nav class="navbar">
-            <div class="nav-left">
-                <img src = "{{url_for('static', filename = 'images/logo.png')}}" alt="Logo" class="logo">
-                <span class = "app-name"> JobAppTrack </span>
+
+<header>
+    <nav class="navbar">
+        <div class="nav-left">
+            <img src="{{url_for('static', filename = 'images/logo.png')}}" alt="Logo" class="logo">
+            <span class="app-name"> JobAppTrack </span>
+        </div>
+        <div class="nav-right">
+            <div class="profile-circle"></div>
+        </div>
+    </nav>
+</header>
+
+<main class="main-content">
+    <section class="form-selection">
+        <h1>Create Account</h1>
+
+        <form method="'POST">
+
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" name="username">
             </div>
-            <div class="nav-right">
-                <div class="profile-circle"></div>
+
+            <div>
+                <label></label>
+                <input>
             </div>
-        </nav>
-    </header>
-    
-    <main class="main-content">
-        <section class = "form-selection">
-            <h1>Create Account</h1>
 
-            <form method="'POST">
+            <div>
+                <label></label>
+                <input>
+            </div>
 
-                <div class="form-group">
-                    <label>Username:</label>
-                    <input type="text" name="username">
-                </div>
+            <div>
+                <label></label>
+                <input>
+            </div>
 
-                <div>
-                    <label></label>
-                    <input>
-                </div>
-
-                <div>
-                    <label></label>
-                    <input>
-                </div>
-
-                <div>
-                    <label></label>
-                    <input>
-                </div>
-
-                <button>Create</button>
-            </form>
-        </section>
-    </main>
-</div>
+            <button>Create</button>
+        </form>
+    </section>
+</main>
 {% endblock %}
-
-
