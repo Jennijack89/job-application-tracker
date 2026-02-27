@@ -71,13 +71,14 @@ body{
 
 /* Outer wrapper for background focus*/
 .form-wrapper{
+    height: 60vh;
     background-color: white;
     padding: 60px;
     border-radius: var(--border-radius);
 }
 
 /*Main form box*/
-.form-section{
+.form-selection{
     background-color: #
     margin: 0 auto;/*centers horizontally*/
 
