@@ -30,27 +30,12 @@
 }
 
 body{
-    margin: 0;
+    /*margin: 0;*/
     background-color: var(--background-color);
     font-family:'Google Sans', sans-serif;
     color: var(--text-color)
 }
 
-.main-content{
-    display:flex;
-    justify-content: center;
-    align-items: center;
-    height: 80vh;
-    background-color: white;
-}
-
-.form-section{
-    width: 100%;
-    max-width: 400px;
-    padding: 30px;
-    border-radius: var(--border-radius);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
 
 .navbar{
     display:flex;
@@ -75,6 +60,51 @@ body{
     border-radius: 50%;
 }
 
+
+.main-content{
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    background-color:var(--background-color);
+}
+
+/* Outer wrapper for background focus*/
+.form-wrapper{
+    background-color: white;
+    padding: 60px;
+    border-radius: var(--border-radius);
+}
+
+/*Main form box*/
+.form-section{
+    background-color: #
+    margin: 0 auto;/*centers horizontally*/
+
+    /***width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);***/
+}
+
+/*Title*/
+.form-title{
+    text-align: center;
+    margin-bottom: 25px; /* space under title*/
+}
+
+/*Space between each input group*/
+.form-group{
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+/*button container (will creat space abovr button)*/
+.button-container {
+    margin-top: 30px; /*space for futur error message*/
+}
 .btn-primary{
     background-color: var(--primary-color);
     border:none;
