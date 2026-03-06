@@ -4,6 +4,7 @@
 # Jennifer, Honey, Tyree,Zion
 
 # Import Flask items, SQlite, and Hashing
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,6 +15,9 @@ app.secret_key = "dev-secret-change-this" #needed for flash + session
 
 #Assign database file to DB_NAME
 DB_NAME = "app.db"
+### These were to check which database the info was saved to, confirmed it was a different one and moved that one to folder
+#print("CWD:", os.getcwd())
+#print("DB path", os.path.abspath(DB_NAME))
 
 # Connects to my DB in SQlite and Returns....
 def get_db_connection():
@@ -43,7 +47,7 @@ init_db()
 ## My Routes
 @app.route("/")
 def home():
-    return render_template("register.html")
+    return redirect(url_for("register"))
 
 
 ## Get the input create account data saves it in variables to be used in table
@@ -92,9 +96,10 @@ def register():
         conn.close()
 
         flash("Account created! Please log in.")
-        return redirect(url_for("login"))
+        return redirect(url_for("register")) #change to redirect to Login when created
     
     return render_template("register.html")
 
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="127.0.0.1", port=5002, debug=True)
