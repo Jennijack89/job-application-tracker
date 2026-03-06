@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content=""width=device-width, initial-scale="1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <title>{% block title %}{% endblock %}</title>
 
@@ -13,6 +13,16 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     </head>
     <body>
+        {% with messages = get_flashed_messages() %}
+            {%if messages %}
+                <div class="container mt-3">
+                    {%for msg in messages %}
+                        <div class="alert alert-warning">{{msg}}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
 
         <!-- Bootstrap JS Bundle (includes Popper) -->
