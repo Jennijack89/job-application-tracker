@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Application</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f3f4f6; margin:0; }
+    .wrap { max-width: 700px; margin: 30px auto; background:#fff; padding: 30px; border-radius: 12px; }
+    label { display:block; margin-top: 14px; font-weight:bold; }
+    input, select { width: 100%; padding: 10px; border-radius: 8px; border:1px solid #ccc; margin-top: 6px; }
+    .row { margin-top: 18px; display:flex; gap:12px; }
+    .btn { padding:10px 16px; border:none; border-radius:10px; cursor:pointer; font-weight:bold; }
+    .btn-save { background:#2563eb; color:#fff; }
+    .btn-back { background:#e5e7eb; color:#111; text-decoration:none; display:inline-block; }
+    .error { color:#b91c1c; margin-top: 10px; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Add New Application</h1>
+
+    <a class="btn btn-back" href="{{ url_for('index') }}">Back to Dashboard</a>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('add_application') }}">
+      <label>Company</label>
+      <input name="company" type="text" required>
+
+      <label>Job Title</label>
+      <input name="job_title" type="text" required>
+
+      <label>Location</label>
+      <input name="location" type="text" required>
+
+      <label>Status</label>
+      <select name="status">
+        <option value="Applied">Applied</option>
+        <option value="Interview">Interview</option>
+        <option value="Offer">Offer</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+
+      <label>Date</label>
+      <input name="apply_date" type="date" required>
+
+      <div class="row">
+        <button class="btn btn-save" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
