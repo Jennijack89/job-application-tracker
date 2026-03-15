@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-DB_NAME = "jobs.db"
+DB_NAME = "database/app.db"
 
 
 def get_db_connection():
