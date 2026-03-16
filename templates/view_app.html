@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}View Applications{% endblock %}
+
+{% block content %}
+<!---your page HTM here---->
+
+<div class="container py-5">
+    <h1 class="form-title mb-4">Saved Applications</h1>
+
+    <div class="mb-4">
+        <a href="{{url_for('add_application')}}" class="btn btn-primary">
+            Add Application
+        </a>
+    </div>
+    {% for app in applications %}
+        <div clas="card mb-3 shadow-sm">
+
+            <div class="card-body">
+                <!-- style="border:1px solid #ddd; padding:15px; margin:10px 0; border-radius:10px; width:450px;"-->
+                
+                <h5 class="card-title">{{ app['company'] }}</h5>
+
+                <p class="card-text">
+                    {{ app['job_title'] }} - {{ app['location'] }}
+                </p>
+
+                <p>
+                    <strong> Status:</strong> {{ app['status'] }}<br>
+                    <strong>Date:</strong> {{ app['apply_date'] }}
+                </p>
+                
+                <form action="{{ url_for('delete_application', id=app['id']) }}" method="POST" class="d-inline">
+                    <button type="submit" class=""btn btn-danger btn-sm">
+                        Delete
+                    </button>
+                </form>
+
+                
+                <a href="{{ url_for('edit_application', id=app['id']) }}" class="btn btn-secondary btn-sm ms-2">
+                    Edit</a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

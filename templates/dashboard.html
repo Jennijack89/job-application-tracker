@@ -4,45 +4,24 @@
 
 {% block content %}
 
+<div>
+    <a href="{{ url_for('add_application') }}">Add New Application</a>
 
-<body>
-
-<a href="{{ url_for('add_application') }}">Add New Application</a>
-
-<h2>Dashboard</h2>
-<div style="display:flex; gap:20px;">
-    <div style="padding:15px; background:#3399ff; color:white; border-radius:10px; width:120px;">
-        Total<br><b>{{ total }}</b>
-    </div>
-    <div style="padding:15px; background:orange; color:white; border-radius:10px; width:120px;">
-        Interview<br><b>{{ interview }}</b>
-    </div>
-    <div style="padding:15px; background:green; color:white; border-radius:10px; width:120px;">
-        Offer<br><b>{{ offer }}</b>
-    </div>
-    <div style="padding:15px; background:red; color:white; border-radius:10px; width:120px;">
-        Rejected<br><b>{{ rejected }}</b>
+    <h2>Dashboard</h2>
+    <div style="display:flex; gap:20px;">
+        <div style="padding:15px; background:#3399ff; color:white; border-radius:10px; width:120px;">
+            Total<br><b>{{ total }}</b>
+        </div>
+        <div style="padding:15px; background:orange; color:white; border-radius:10px; width:120px;">
+            Interview<br><b>{{ interview }}</b>
+        </div>
+        <div style="padding:15px; background:green; color:white; border-radius:10px; width:120px;">
+            Offer<br><b>{{ offer }}</b>
+        </div>
+        <div style="padding:15px; background:red; color:white; border-radius:10px; width:120px;">
+            Rejected<br><b>{{ rejected }}</b>
+        </div>
     </div>
 </div>
 
-<h2>Saved Applications</h2>
-
-{% for app in applications %}
-<div style="border:1px solid #ddd; padding:15px; margin:10px 0; border-radius:10px; width:450px;">
-    <b>{{ app['company'] }}</b><br>
-    {{ app['job_title'] }} — {{ app['location'] }}<br>
-    Status: <b>{{ app['status'] }}</b><br>
-    Date: {{ app['apply_date'] }}<br><br>
-
-    <form action="{{ url_for('delete_application', id=app['id']) }}" method="POST" style="display:inline;">
-        <button type="submit" style="background:red; color:white; border:none; padding:8px 12px; border-radius:8px;">
-            Delete
-        </button>
-    </form>
-
-    <a href="{{ url_for('edit_application', id=app['id']) }}" style="margin-left:15px;">Edit</a>
-</div>
-{% endfor %}
-
-</body>
 {% endblock %}

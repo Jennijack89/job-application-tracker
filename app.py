@@ -45,6 +45,8 @@ init_db()
    
 
 ## My Routes
+
+## This will change to re-sirect to login page when it's created
 @app.route("/")
 def home():
     return redirect(url_for("register"))
@@ -125,6 +127,15 @@ def dashboard():
         rejected=rejected
     )
 
+## View Applications
+@app.route("/applications")
+def view_app():
+    conn = get_db_connection()
+    applications = conn.execute("SELECT * FROM applications ORDER BY id DESC").fetchall()
+    conn.close()
+
+    return render_template("view_app.html", applications=applications)
+
 ## Add Application Route
 
 @app.route("/add", methods=["GET", "POST"])
@@ -145,7 +156,7 @@ def add_application():
         conn.close()
 
         # ✅ After saving, go back to dashboard (Issue #78 behavior)
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("view_app"))
 
     return render_template("add_application.html")
 
@@ -184,7 +195,7 @@ def delete_application(id):
     conn.execute("DELETE FROM applications WHERE id=?", (id,))
     conn.commit()
     conn.close()
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("view_app"))
 
 
 if __name__ == "__main__":
