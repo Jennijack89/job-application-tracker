@@ -1,11 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Job Application Tracker</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-<h1>Job Application Tracker</h1>
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+
+<body>
 
 <a href="{{ url_for('add_application') }}">Add New Application</a>
 
@@ -45,4 +45,4 @@
 {% endfor %}
 
 </body>
-</html>
+{% endblock %}
