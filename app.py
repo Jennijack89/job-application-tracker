@@ -96,7 +96,7 @@ def register():
         conn.close()
 
         flash("Account created! Please log in.")
-        return redirect(url_for("register")) #change to redirect to Login when created
+        return redirect(url_for("dashboard")) #change to redirect to Login when created
     
     return render_template("register.html")
 
