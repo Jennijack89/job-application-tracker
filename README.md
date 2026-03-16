@@ -61,5 +61,41 @@ http://localhost:5000
 ### 7. Deactivate the virtual environment when done:
 Terminal type: deactivate
 
+## Important Merge Update 3/15/26
 
+-Merged user registration code and application tracking code into one main Flask app: app.py
+
+-Combined database usage so the app now uses one shared database: database/app.db
+
+-Kept the users table in app.db for account creation data
+
+-Added/used the applications table in app.db for job application tracking
+
+-Moved application data from database/jobs.db into database/app.db
+
+-Updated merged routes so dashboard/add/edit/delete application features now run from app.py
+
+-Updated route redirects from old index references to dashboard
+
+-Removed old unused files:
+
+    -honey_app.py
+
+    -database/jobs.db
+
+    -merge_jobs_into_app.py
+
+    -templates/index.html
+
+-Verified working features:
+
+    -Create account
+
+    -Save user to database
+
+    -Dashboard display
+
+    -Add application
+
+    -Delete application
 

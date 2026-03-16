@@ -14,7 +14,7 @@ app = Flask(__name__)
 app.secret_key = "dev-secret-change-this" #needed for flash + session
 
 #Assign database file to DB_NAME
-DB_NAME = "app.db"
+DB_NAME = "database/app.db"
 ### These were to check which database the info was saved to, confirmed it was a different one and moved that one to folder
 #print("CWD:", os.getcwd())
 #print("DB path", os.path.abspath(DB_NAME))
@@ -96,9 +96,95 @@ def register():
         conn.close()
 
         flash("Account created! Please log in.")
-        return redirect(url_for("register")) #change to redirect to Login when created
+        return redirect(url_for("dashboard")) #change to redirect to Login when created
     
     return render_template("register.html")
+
+## Dashboard Route
+
+@app.route("/dashboard")
+def dashboard():
+    conn = get_db_connection()
+    applications = conn.execute("SELECT * FROM applications ORDER BY id DESC").fetchall()
+
+    total = conn.execute("SELECT COUNT(*) FROM applications").fetchone()[0]
+    applied = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Applied'").fetchone()[0]
+    interview = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Interview'").fetchone()[0]
+    offer = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Offer'").fetchone()[0]
+    rejected = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Rejected'").fetchone()[0]
+
+    conn.close()
+
+    return render_template(
+        "dashboard.html",
+        applications=applications,
+        total=total,
+        applied=applied,
+        interview=interview,
+        offer=offer,
+        rejected=rejected
+    )
+
+## Add Application Route
+
+@app.route("/add", methods=["GET", "POST"])
+def add_application():
+    if request.method == "POST":
+        company = request.form["company"].strip()
+        job_title = request.form["job_title"].strip()
+        location = request.form["location"].strip()
+        status = request.form["status"].strip()
+        apply_date = request.form["apply_date"].strip()
+
+        conn = get_db_connection()
+        conn.execute(
+            "INSERT INTO applications (company, job_title, location, status, apply_date) VALUES (?, ?, ?, ?, ?)",
+            (company, job_title, location, status, apply_date)
+        )
+        conn.commit()
+        conn.close()
+
+        # ✅ After saving, go back to dashboard (Issue #78 behavior)
+        return redirect(url_for("dashboard"))
+
+    return render_template("add_application.html")
+
+## Edit Application Route
+
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
+def edit_application(id):
+    conn = get_db_connection()
+    application = conn.execute("SELECT * FROM applications WHERE id=?", (id,)).fetchone()
+
+    if request.method == "POST":
+        company = request.form["company"].strip()
+        job_title = request.form["job_title"].strip()
+        location = request.form["location"].strip()
+        status = request.form["status"].strip()
+        apply_date = request.form["apply_date"].strip()
+
+        conn.execute("""
+            UPDATE applications
+            SET company=?, job_title=?, location=?, status=?, apply_date=?
+            WHERE id=?
+        """, (company, job_title, location, status, apply_date, id))
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for("dashboard"))
+
+    conn.close()
+    return render_template("edit_application.html", application=application)
+
+## Delete Application Route
+
+@app.route("/delete/<int:id>", methods=["POST"])
+def delete_application(id):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM applications WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("dashboard"))
 
 
 if __name__ == "__main__":

@@ -79,7 +79,7 @@ body{
 
 /*Main form box*/
 .form-selection{
-    background-color: #
+    background-color:white;
     margin: 0 auto;/*centers horizontally*/
 
     /***width: 100%;
@@ -112,7 +112,7 @@ body{
     border-radius: var(--border-radius);
 }
 
-.btn-primary.hover{
+.btn-primary:hover{
     opacity: 0.9;
 }
 
