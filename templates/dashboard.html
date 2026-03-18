@@ -3,11 +3,23 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
+<div class="welcome-bar">
+    <div class ="welcome-content">
+        <h2 class = "welcome-text"> Welcome Back</h2>
+        <p class="body-text">
+            Here's an overview of your job application activity
+        </p>
+    </div>
+</div>
+
+
+
+<div class="button-container">
+    <a href="{{ url_for('add_application') }}" class="btn btn-primary">Add New Application</a>
+</div>
 
 <div>
-    <a href="{{ url_for('add_application') }}">Add New Application</a>
-
-    <h2>Dashboard</h2>
+    <h1 class="h1">Dashboard</h1>
     <div style="display:flex; gap:20px;">
         <div style="padding:15px; background:#3399ff; color:white; border-radius:10px; width:120px;">
             Total<br><b>{{ total }}</b>
