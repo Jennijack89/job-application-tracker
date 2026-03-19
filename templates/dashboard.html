@@ -1,48 +1,84 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Job Application Tracker</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-<h1>Job Application Tracker</h1>
+{% block title %}Dashboard{% endblock %}
 
-<a href="{{ url_for('add_application') }}">Add New Application</a>
+{% block content %}
+<div class="dashboard-page">
+    <section class="welcome-bar">
+        <div class ="welcome-content">
+            <h2 class = "welcome-title"> Welcome Back</h2>
+            <p class="welcome-text">
+                Here's an overview of your job application activity
+            </p>
+        </div>
+    </section>
 
-<h2>Dashboard</h2>
-<div style="display:flex; gap:20px;">
-    <div style="padding:15px; background:#3399ff; color:white; border-radius:10px; width:120px;">
-        Total<br><b>{{ total }}</b>
-    </div>
-    <div style="padding:15px; background:orange; color:white; border-radius:10px; width:120px;">
-        Interview<br><b>{{ interview }}</b>
-    </div>
-    <div style="padding:15px; background:green; color:white; border-radius:10px; width:120px;">
-        Offer<br><b>{{ offer }}</b>
-    </div>
-    <div style="padding:15px; background:red; color:white; border-radius:10px; width:120px;">
-        Rejected<br><b>{{ rejected }}</b>
-    </div>
+    
+    <main class="dashboard-container">
+
+        <div class="dashboard-top">
+
+                <!--Dashboard At A Glance section-->
+                <section class="dashboard-glance">
+                    <h2 class="h2 section-heading">At a Glance</h2>
+
+                    <div class="card stat-card">
+                        <div class="card-bar"></div>
+                        <div class="card-body">
+                            <span class="card-label">Applications Submitted</span>
+                            <span class="card-value">{{ total }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="card-bar"></div>
+                        <div class="card-body">
+                            <span class="card-label">Applied This Week/ Interview</span>
+                            <span class="card-value">{{ interview }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="card-bar"></div>
+                        <div class="card-body">
+                            <span class="card-label">Waiting for Response/ Offer</span>
+                            <span class="card-value">{{ offer }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="card-bar"></div>
+                        <div class="card-body">
+                            <span class="card-label">Waiting for Response/ Rejected</span>
+                            <span class="card-value">{{ rejected }}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!--Dashboard chart Section-->
+                <section class="dashboard-chart">
+                    <h2 class="h2 section-heading">Applications Overtime
+                    <div class="chart-card">
+
+
+                    </div>
+                    </h2>
+                    
+                </section>
+                
+        </div>
+        
+        <section class="reminder-bar">
+            <h2 class="h3">Reminder /Action Items</h2>
+            <p class = "body-text"> Deadlines, follow-ups, and reminders will go here</p>
+        </section>
+
+        <div class="dashboard-actions">
+            <a href="{{ url_for('add_application') }}" class="btn btn-primary">Add New Application</a>
+            <a href="{{ url_for('view_app') }}" class="btn btn-primary">View Applications</a>
+        </div>
+
+    </main>
 </div>
 
-<h2>Saved Applications</h2>
-
-{% for app in applications %}
-<div style="border:1px solid #ddd; padding:15px; margin:10px 0; border-radius:10px; width:450px;">
-    <b>{{ app['company'] }}</b><br>
-    {{ app['job_title'] }} — {{ app['location'] }}<br>
-    Status: <b>{{ app['status'] }}</b><br>
-    Date: {{ app['apply_date'] }}<br><br>
-
-    <form action="{{ url_for('delete_application', id=app['id']) }}" method="POST" style="display:inline;">
-        <button type="submit" style="background:red; color:white; border:none; padding:8px 12px; border-radius:8px;">
-            Delete
-        </button>
-    </form>
-
-    <a href="{{ url_for('edit_application', id=app['id']) }}" style="margin-left:15px;">Edit</a>
-</div>
-{% endfor %}
-
-</body>
-</html>
+{% endblock %}

@@ -13,6 +13,29 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     </head>
     <body>
+
+        <header>
+            <nav class="navbar">
+                <div class="nav-left">
+                    <img src="{{url_for('static', filename = 'images/logo.png')}}" alt="Logo" class="logo">
+                    <span class="app-name"> JobAppTrack </span>
+                </div>
+
+                <div class="nav-center">
+                    <!-- Change to this once login page added % if session.get('user_id') % -->
+                    {% if request.endpoint not in ['register', 'login'] %}
+                        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                        <a href="{{ url_for('add_application') }}">Add Application</a>
+                        <a href="{{ url_for('view_app') }}"> View Applications</a>
+                    {% endif %}
+                </div>
+
+                <div class="nav-right">
+                    <div class="profile-circle"></div>
+                </div>
+            </nav>
+        </header>
+
         {% with messages = get_flashed_messages() %}
             {%if messages %}
                 <div class="container mt-3">
