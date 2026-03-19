@@ -96,11 +96,21 @@ body{
     border-radius: 50%;
 }
 
+/* PAGE LAYOUT*/
+.dashboard-page{
+    background-color: var(--background-color);
+    min-height: 100vh;
+}
+
 .welcome-bar{
     width: 100%;
     background-color: var(--background-color);
     border-bottom: 1px solid #e5e7eb;
     padding: 20px 40px;
+}
+
+.welcome-content{
+    max-width: 1200px;
 }
 
 .welcome-title{
@@ -121,16 +131,19 @@ body{
     display:flex;
     justify-content: center;
     align-items: center;
-    height: 80vh;
+    height: 100vh;
+    width: 40%;
     background-color:var(--background-color);
 }
 
 /* Outer wrapper for background focus*/
 .form-wrapper{
-    height: 60vh;
+    height: 70vh;
     background-color: white;
     padding: 60px;
     border-radius: var(--border-radius);
+    border: 2px solid lightgray;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 /*Main form box*/
@@ -185,4 +198,73 @@ body{
 
 .form-control:focus {
     box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+/* MAIN DASHBOARD AREA */
+/*.dashboard-main{
+    display: flex;
+    gap: 24px;
+    align-items: stretch;
+}*/
+
+.dashboard-container {
+    width: 80%;
+    margin:  30px auto 40px auto;
+}
+
+.dashboard-top{
+    display: flex;
+    gap: 24px;
+    align-items:stretch;
+    margin-bottom: 24px;
+}
+
+.dashboard-glance{
+    width: 35%;
+}
+
+.dashboard-chart{
+    width: 65%;
+}
+
+.section-heading{
+    margin-bottom: 16px;
+}
+
+/* CARDS*/
+
+.card{
+    background-color: var(--background-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.stat-card{
+    margin-bottom: 18px;
+}
+
+.card-bar{
+    height: 8px;
+    background-color: var(--accent-color);
+}
+
+.card-body{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+}
+
+.card-label{
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.card-value{
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
 }

@@ -5,12 +5,12 @@
 {% block content %}
 
 
-<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light">
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center" style="background-color:#4AB5B5;">
     <!--Outer wrapper (background color behind)-->
-     <div class="main-content">
+    <div class="main-content">
         <div class="form-wrapper">
             <section class="form-selection">
-                 <!--main class="card shadow-lg p-4" style="width: 400px;"-->
+                
                 <h1 class="form-title">Create Account</h1>
 
                 <form method="POST" action="{{ url_for('register')}}">
@@ -41,9 +41,10 @@
                     </button>
                     </div>
                 </form>
-            <!--/main-->
+          
             </section>
         </div>
     </div>
+   
 </div>  
 {% endblock %}
