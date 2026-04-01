@@ -73,6 +73,12 @@
                     <h2 class="h2 section-heading">Applications Over time</h2>
                     <div class="chart-card">
 
+                        <ul>
+                            {% for row in weekly_data %}
+                                <li>{{ row['week'] }}: {{ row['count'] }}</li>
+                            {% endfor %}
+                        </ul>
+
 
                     </div>
                                         

@@ -130,6 +130,15 @@ def dashboard():
         (start_of_week_str,)
     ).fetchone()[0]
 
+    weekly_data = conn.execute("""
+        SELECT
+            strftime('%Y-%W', apply_date) as week,
+            COUNT(*) as count
+        FROM applications
+        GROUP BY week
+        ORDER BY week
+    """).fetchall()
+
     conn.close()
 
     return render_template(
@@ -142,6 +151,7 @@ def dashboard():
         rejected=rejected,
         waiting=waiting,
         applied_this_week=applied_this_week,
+        weekly_data=weekly_data
     )
 
 ## View Applications
