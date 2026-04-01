@@ -37,6 +37,10 @@ def init_db():
 
     # future tables fo here too.....
     # conn.execute("""CREATE TABLE IF NOT EXISTS...""")
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS applications(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    company TEXT)""")
     
     conn.commit()
     conn.close()
@@ -114,7 +118,7 @@ def dashboard():
     interview = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Interview'").fetchone()[0]
     offer = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Offer'").fetchone()[0]
     rejected = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Rejected'").fetchone()[0]
-
+    waiting = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Applied'").fetchone()[0]
     conn.close()
 
     return render_template(
@@ -124,7 +128,8 @@ def dashboard():
         applied=applied,
         interview=interview,
         offer=offer,
-        rejected=rejected
+        rejected=rejected,
+        waiting=waiting
     )
 
 ## View Applications
