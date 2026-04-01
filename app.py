@@ -8,6 +8,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import date, timedelta
 
 #Assign Flask to app
 app = Flask(__name__)
@@ -119,6 +120,16 @@ def dashboard():
     offer = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Offer'").fetchone()[0]
     rejected = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Rejected'").fetchone()[0]
     waiting = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Applied'").fetchone()[0]
+    
+    today=date.today()
+    start_of_week =today - timedelta(days=today.weekday())
+    start_of_week_str = start_of_week.isoformat()
+
+    applied_this_week = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE apply_date >= ?",
+        (start_of_week_str,)
+    ).fetchone()[0]
+
     conn.close()
 
     return render_template(
@@ -129,7 +140,8 @@ def dashboard():
         interview=interview,
         offer=offer,
         rejected=rejected,
-        waiting=waiting
+        waiting=waiting,
+        applied_this_week=applied_this_week,
     )
 
 ## View Applications

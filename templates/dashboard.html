@@ -33,8 +33,8 @@
                     <div class="card stat-card">
                         <div class="card-bar"></div>
                         <div class="card-body">
-                            <span class="card-label">Applied This Week/ Interview</span>
-                            <span class="card-value">{{ interview }}</span>
+                            <span class="card-label">Submitted This Week</span>
+                            <span class="card-value">{{ applied_this_week }}</span>
                         </div>
                     </div>
 
@@ -48,22 +48,34 @@
 
                     <div class="card stat-card">
                         <div class="card-bar"></div>
-                        <div class="card-body">
-                            <span class="card-label">Waiting for Response/ Rejected</span>
-                            <span class="card-value">{{ rejected }}</span>
+
+                        <div class="status-summary">
+                            <div class="status-column">
+                                <span class="card-label">Interview</span>
+                                <span class="card-value">{{ interview }}</span>
+                            </div>
+                            
+                            <div class="status-column">
+                                <span class="card-label">Offer</span>
+                                <span class="card-value">{{ offer }}</span>
+                            </div>
+
+                            <div class="status-column">
+                                <span class="card-label">Rejected</span>
+                                <span class="card-value">{{ rejected }}</span>
+                            </div>
                         </div>
                     </div>
                 </section>
 
                 <!--Dashboard chart Section-->
                 <section class="dashboard-chart">
-                    <h2 class="h2 section-heading">Applications Overtime
+                    <h2 class="h2 section-heading">Applications Over time</h2>
                     <div class="chart-card">
 
 
                     </div>
-                    </h2>
-                    
+                                        
                 </section>
                 
         </div>
