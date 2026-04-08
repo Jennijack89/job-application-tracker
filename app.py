@@ -130,7 +130,7 @@ def dashboard():
         (start_of_week_str,)
     ).fetchone()[0]
 
-    weekly_data = conn.execute("""
+    weekly_data_rows = conn.execute("""
         SELECT
             strftime('%Y-%W', apply_date) as week,
             COUNT(*) as count
@@ -138,6 +138,8 @@ def dashboard():
         GROUP BY week
         ORDER BY week
     """).fetchall()
+
+    weekly_data = [dict(row) for row in weekly_data_rows]
 
     conn.close()
 

@@ -73,13 +73,8 @@
                     <h2 class="h2 section-heading">Applications Over time</h2>
                     <div class="chart-card">
 
-                        <ul>
-                            {% for row in weekly_data %}
-                                <li>{{ row['week'] }}: {{ row['count'] }}</li>
-                            {% endfor %}
-                        </ul>
-
-
+                        <canvas id="weeklyChart" height="220"></canvas>                    
+                        
                     </div>
                                         
                 </section>
@@ -99,4 +94,38 @@
     </main>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const weeklyData = {{ weekly_data | tojson }};
+    console.log(weeklyData);
+
+    const labels = weeklyData.map(row => row.week);
+    const data = weeklyData.map(row => row.count);
+
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+
+    new Chart(ctx, {
+        type:'bar',
+        data:{
+            labels: labels,
+            datasets: [{
+                label: 'Applications per Week',
+                data: data,
+                backgroundColor: '#525AFF'
+            
+            }]
+        },
+
+        options: {
+            responsive:true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}
