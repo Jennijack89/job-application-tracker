@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <section class="welcome-bar">
+        <div class ="welcome-content">
+            <h2 class = "welcome-title"> Welcome Back</h2>
+            <p class="welcome-text">
+                Here's an overview of your job application activity
+            </p>
+        </div>
+    </section>
+
+    
+    <main class="dashboard-container">
+
+        <div class="dashboard-top">
+
+                <!--Dashboard At A Glance section-->
+                <section class="dashboard-glance">
+                    <h2 class="h2 section-heading">At a Glance</h2>
+
+                    <div class="card stat-card">
+                        <div class="card-bar"></div>
+                        <div class="card-body">
+                            <span class="card-label">Applications Submitted</span>
+                            <span class="card-value">{{ total }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="card-bar"></div>
+                        <div class="card-body">
+                            <span class="card-label">Applied This Week/ Interview</span>
+                            <span class="card-value">{{ interview }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="card-bar"></div>
+                        <div class="card-body">
+                            <span class="card-label">Waiting for Response/ Offer</span>
+                            <span class="card-value">{{ offer }}</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="card-bar"></div>
+                        <div class="card-body">
+                            <span class="card-label">Waiting for Response/ Rejected</span>
+                            <span class="card-value">{{ rejected }}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!--Dashboard chart Section-->
+                <section class="dashboard-chart">
+                    <h2 class="h2 section-heading">Applications Overtime
+                    <div class="chart-card">
+
+
+                    </div>
+                    </h2>
+                    
+                </section>
+                
+        </div>
+        
+        <section class="reminder-bar">
+            <h2 class="h3">Reminder /Action Items</h2>
+            <p class = "body-text"> Deadlines, follow-ups, and reminders will go here</p>
+        </section>
+
+        <div class="dashboard-actions">
+            <a href="{{ url_for('add_application') }}" class="btn btn-primary">Add New Application</a>
+            <a href="{{ url_for('view_app') }}" class="btn btn-primary">View Applications</a>
+        </div>
+
+    </main>
+</div>
+
+{% endblock %}
