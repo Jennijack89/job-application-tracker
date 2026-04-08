@@ -8,6 +8,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import date, timedelta
 
 #Assign Flask to app
 app = Flask(__name__)
@@ -37,6 +38,10 @@ def init_db():
 
     # future tables fo here too.....
     # conn.execute("""CREATE TABLE IF NOT EXISTS...""")
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS applications(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    company TEXT)""")
     
     conn.commit()
     conn.close()
@@ -114,6 +119,27 @@ def dashboard():
     interview = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Interview'").fetchone()[0]
     offer = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Offer'").fetchone()[0]
     rejected = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Rejected'").fetchone()[0]
+    waiting = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Applied'").fetchone()[0]
+    
+    today=date.today()
+    start_of_week =today - timedelta(days=today.weekday())
+    start_of_week_str = start_of_week.isoformat()
+
+    applied_this_week = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE apply_date >= ?",
+        (start_of_week_str,)
+    ).fetchone()[0]
+
+    weekly_data_rows = conn.execute("""
+        SELECT
+            strftime('%Y-%W', apply_date) as week,
+            COUNT(*) as count
+        FROM applications
+        GROUP BY week
+        ORDER BY week
+    """).fetchall()
+
+    weekly_data = [dict(row) for row in weekly_data_rows]
 
     conn.close()
 
@@ -124,7 +150,10 @@ def dashboard():
         applied=applied,
         interview=interview,
         offer=offer,
-        rejected=rejected
+        rejected=rejected,
+        waiting=waiting,
+        applied_this_week=applied_this_week,
+        weekly_data=weekly_data
     )
 
 ## View Applications

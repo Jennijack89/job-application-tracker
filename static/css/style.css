@@ -258,6 +258,28 @@ body{
     padding: 20px;
 }
 
+.status-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    padding: 20px;
+}
+
+.status-column{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 12px;
+    border-right:1px solid #e5e7eb;
+}
+
+.status-column:last-child{
+    border-right: none;
+}
+
 .card-label{
     font-size: 1rem;
     font-weight: 500;
