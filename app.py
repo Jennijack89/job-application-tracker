@@ -132,14 +132,36 @@ def dashboard():
 
     weekly_data_rows = conn.execute("""
         SELECT
-            strftime('%Y-%W', apply_date) as week,
+            strftime('%m', apply_date) as month_num,
+            CAST(((CAST(strftime('%d', apply_date) AS INTEGER) - 1) / 7) + 1 AS INTEGER) as week_of_month,
             COUNT(*) as count
         FROM applications
-        GROUP BY week
-        ORDER BY week
+        GROUP BY month_num, week_of_month
+        ORDER BY month_num, week_of_month
     """).fetchall()
 
-    weekly_data = [dict(row) for row in weekly_data_rows]
+    month_names = {
+        "01": "January",
+        "02": "February",
+        "03": "March",
+        "04": "April",
+        "05": "May",
+        "06": "June",
+        "07": "July",
+        "08": "August",
+        "09": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December",
+    }
+
+    weekly_data = []
+
+    for row in weekly_data_rows:
+        weekly_data.append({
+            "label": f"{month_names[row['month_num']]} Week {row['week_of_month']}",
+            "count": row["count"]
+        })
 
     conn.close()
 

@@ -101,7 +101,7 @@
     const weeklyData = {{ weekly_data | tojson }};
     console.log(weeklyData);
 
-    const labels = weeklyData.map(row => row.week);
+    const labels = weeklyData.map(row => row.label);
     const data = weeklyData.map(row => row.count);
 
     const ctx = document.getElementById('weeklyChart').getContext('2d');
@@ -120,6 +120,7 @@
 
         options: {
             responsive:true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
