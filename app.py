@@ -130,6 +130,17 @@ def dashboard():
         (start_of_week_str,)
     ).fetchone()[0]
 
+    if interview > 0:
+        reminder_message = "Remember to follow up within 2-3 days after your interview."
+    elif offer > 0:
+        reminder_message = "Review your offer details and keep track of any deadlines."
+    elif waiting > 0:
+        reminder_message = "Check in on applications that have been waiting for a response."
+    elif rejected > 0:
+        reminder_message = "Keep going and continue applying to new opportunities."
+    else:
+        reminder_message = "Start adding applications to begin tracking your progress."
+
     weekly_data_rows = conn.execute("""
         SELECT
             strftime('%m', apply_date) as month_num,
@@ -175,7 +186,8 @@ def dashboard():
         rejected=rejected,
         waiting=waiting,
         applied_this_week=applied_this_week,
-        weekly_data=weekly_data
+        weekly_data=weekly_data,
+        reminder_message=reminder_message
     )
 
 ## View Applications
