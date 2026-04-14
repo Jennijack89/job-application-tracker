@@ -54,10 +54,49 @@ init_db()
 ## This will change to re-sirect to login page when it's created
 @app.route("/")
 def home():
-    return redirect(url_for("register"))
+    return redirect(url_for("login"))
 
 
 ## Get the input create account data saves it in variables to be used in table
+###Login
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username_or_email = request.form.get("username","").strip()
+        password = request.form.get("password", "")
+
+        conn = get_db_connection()
+
+        #try the exact username match first
+        user = conn.execute(
+            "SELECT * FROM users WHERE username = ?",
+            (username_or_email,)
+        ).fetchone()
+
+        # if no username mathc, see if lowercase email matches
+        if not user:
+            user = conn.execute(
+                "SELECT * FROM users WHERE email = ?",
+                (username_or_email.lower(),)
+            ).fetchone()
+
+        conn.close()
+
+        if user and check_password_hash(user["password_hash"], password):
+            session["user_id"] = user["user_ID"]
+            session["username"] = user["username"]
+            flash("Login sucessful.")
+            return redirect(url_for("dashboard"))
+        else:
+            flash("Invalid username/email or password.")
+            return render_template("login.html")
+    return render_template("login.html")
+
+
+
+###Register Route
+
 @app.route("/register", methods=["GET","POST"])
 def register():
     if request.method == "POST":
@@ -103,11 +142,11 @@ def register():
         conn.close()
 
         flash("Account created! Please log in.")
-        return redirect(url_for("dashboard")) #change to redirect to Login when created
+        return redirect(url_for("login")) #change to redirect to Login when created:DONE!
     
     return render_template("register.html")
 
-## Dashboard Route
+### Dashboard Route
 
 @app.route("/dashboard")
 def dashboard():
