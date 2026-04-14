@@ -83,7 +83,13 @@
         
         <section class="reminder-bar">
             <h2 class="h3">Reminder /Action Items</h2>
-            <p class = "body-text"> {{ reminder_message }}</p>
+            <!--<p class = "body-text"> {{ reminder_message }}</p>-->
+
+            <ul class="body-text">
+                {% for message in reminder_messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
         </section>
 
         <div class="dashboard-actions">
