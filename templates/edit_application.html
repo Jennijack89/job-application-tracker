@@ -1,48 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Job Application Tracker</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-<h1>Job Application Tracker</h1>
+{% block title %}Edit Application{% endblock %}
 
-<a href="{{ url_for('add_application') }}">Add New Application</a>
+{% block content %}
+<div class="container py-5">
+  <div class="mx-auto" style="max-width: 700px; background:#fff; padding: 30px; border-radius: 12px;">
+    <h1 class="mb-4">Edit Application</h1>
 
-<h2>Dashboard</h2>
-<div style="display:flex; gap:20px;">
-    <div style="padding:15px; background:#3399ff; color:white; border-radius:10px; width:120px;">
-        Total<br><b>{{ total }}</b>
-    </div>
-    <div style="padding:15px; background:orange; color:white; border-radius:10px; width:120px;">
-        Interview<br><b>{{ interview }}</b>
-    </div>
-    <div style="padding:15px; background:green; color:white; border-radius:10px; width:120px;">
-        Offer<br><b>{{ offer }}</b>
-    </div>
-    <div style="padding:15px; background:red; color:white; border-radius:10px; width:120px;">
-        Rejected<br><b>{{ rejected }}</b>
-    </div>
-</div>
+    <a class="btn btn-secondary mb-3" href="{{ url_for('view_app') }}">Back to Applications</a>
 
-<h2>Saved Applications</h2>
+    <form method="POST" action="{{ url_for('edit_application', app_id=application['id']) }}">
+      <label class="form-label">Company</label>
+      <input name="company" type="text" class="form-control" value="{{ application['company'] }}" required>
 
-{% for app in applications %}
-<div style="border:1px solid #ddd; padding:15px; margin:10px 0; border-radius:10px; width:450px;">
-    <b>{{ app['company'] }}</b><br>
-    {{ app['job_title'] }} — {{ app['location'] }}<br>
-    Status: <b>{{ app['status'] }}</b><br>
-    Date: {{ app['apply_date'] }}<br><br>
+      <label class="form-label mt-3">Job Title</label>
+      <input name="job_title" type="text" class="form-control" value="{{ application['job_title'] }}" required>
 
-    <form action="{{ url_for('delete_application', id=app['id']) }}" method="POST" style="display:inline;">
-        <button type="submit" style="background:red; color:white; border:none; padding:8px 12px; border-radius:8px;">
-            Delete
-        </button>
+      <label class="form-label mt-3">Location</label>
+      <input name="location" type="text" class="form-control" value="{{ application['location'] }}" required>
+
+      <label class="form-label mt-3">Status</label>
+      <select name="status" class="form-control">
+        <option value="Applied" {% if application['status'] == 'Applied' %}selected{% endif %}>Applied</option>
+        <option value="Interview" {% if application['status'] == 'Interview' %}selected{% endif %}>Interview</option>
+        <option value="Offer" {% if application['status'] == 'Offer' %}selected{% endif %}>Offer</option>
+        <option value="Rejected" {% if application['status'] == 'Rejected' %}selected{% endif %}>Rejected</option>
+      </select>
+
+      <label class="form-label mt-3">Date</label>
+      <input name="apply_date" type="date" class="form-control" value="{{ application['apply_date'] }}" required>
+
+      <div class="mt-4">
+        <button class="btn btn-primary" type="submit">Update</button>
+      </div>
     </form>
-
-    <a href="{{ url_for('edit_application', id=app['id']) }}" style="margin-left:15px;">Edit</a>
+  </div>
 </div>
-{% endfor %}
-
-</body>
-</html>
+{% endblock %}

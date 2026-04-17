@@ -4,81 +4,194 @@
 # Jennifer, Honey, Tyree,Zion
 
 # Import Flask items, SQlite, and Hashing
+
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+import smtplib
 import sqlite3
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date, timedelta
+import random
+import smtplib
+from email.mime.text import MIMEText
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USERNAME = "patelhoney1209@gmail.com"
+SMTP_PASSWORD = "gbhqxuctnvftxxps"
+EMAIL_FROM = "patelhoney1209@gmail.com"
+SMTP_USE_TLS = True
+from datetime import date, datetime, timedelta
+from email.message import EmailMessage
+from functools import wraps
 
-#Assign Flask to app
+from flask import Flask, flash, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
+
 app = Flask(__name__)
-app.secret_key = "dev-secret-change-this" #needed for flash + session
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-this")
 
-#Assign database file to DB_NAME
 DB_NAME = "database/app.db"
-### These were to check which database the info was saved to, confirmed it was a different one and moved that one to folder
-#print("CWD:", os.getcwd())
-#print("DB path", os.path.abspath(DB_NAME))
 
-# Connects to my DB in SQlite and Returns....
+
+
+def send_reset_code(to_email, code):
+    subject = "Password Reset Code"
+    body = f"Your password reset code is: {code}\n\nThis code expires in 15 minutes."
+
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = EMAIL_FROM
+    msg["To"] = to_email
+
+    try:
+        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+        server.starttls()
+        server.login(SMTP_USERNAME, SMTP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        print("Email sent successfully")
+    except Exception as e:
+        print("Email failed:", e)
+        
 def get_db_connection():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
 
+
+def column_exists(conn, table_name, column_name):
+    columns = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    return any(col[1] == column_name for col in columns)
+
+
+def ensure_column(conn, table_name, column_name, definition):
+    if not column_exists(conn, table_name, column_name):
+        conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {definition}")
+
+
 def init_db():
     conn = get_db_connection()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS users(
-        user_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL
-        )""")
 
-    # future tables fo here too.....
-    # conn.execute("""CREATE TABLE IF NOT EXISTS...""")
-    conn.execute("""
-    CREATE TABLE IF NOT EXISTS applications(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    company TEXT)""")
-    
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users(
+            user_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            reset_code_hash TEXT,
+            reset_code_expiry TEXT
+        )
+        """
+    )
+
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS applications(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            company TEXT,
+            job_title TEXT,
+            location TEXT,
+            status TEXT,
+            apply_date TEXT,
+            user_id INTEGER
+        )
+        """
+    )
+
+    # Backfill older project databases safely.
+    ensure_column(conn, "users", "reset_code_hash", "TEXT")
+    ensure_column(conn, "users", "reset_code_expiry", "TEXT")
+
+    ensure_column(conn, "applications", "job_title", "TEXT")
+    ensure_column(conn, "applications", "location", "TEXT")
+    ensure_column(conn, "applications", "status", "TEXT")
+    ensure_column(conn, "applications", "apply_date", "TEXT")
+    ensure_column(conn, "applications", "user_id", "INTEGER")
+
     conn.commit()
     conn.close()
-    
+
+
 init_db()
-   
 
-## My Routes
 
-## This will change to re-sirect to login page when it's created
+def login_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in first.")
+            return redirect(url_for("login"))
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def send_reset_code_email(recipient_email, code):
+    """Returns (email_sent, error_message)."""
+    if not all([SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM]):
+        print("\n=== Password Reset Code (SMTP not configured) ===")
+        print(f"Email: {recipient_email}")
+        print(f"Code: {code}")
+        print("===============================================\n")
+        return False, "SMTP is not configured yet."
+
+    msg = EmailMessage()
+    msg["Subject"] = "Your JobAppTrack password reset code"
+    msg["From"] = EMAIL_FROM
+    msg["To"] = recipient_email
+    msg.set_content(
+        f"Your JobAppTrack password reset code is: {code}\n\n"
+        "This code expires in 15 minutes.\n"
+        "If you did not request a password reset, you can ignore this email."
+    )
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
+            if SMTP_USE_TLS:
+                server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+        return True, ""
+    except Exception as exc:
+        print("Failed to send reset code email:", exc)
+        print("\n=== Password Reset Code (email send failed) ===")
+        print(f"Email: {recipient_email}")
+        print(f"Code: {code}")
+        print("=============================================\n")
+        return False, str(exc)
+
+
+def get_current_user_application(conn, app_id, user_id):
+    return conn.execute(
+        "SELECT * FROM applications WHERE id = ? AND user_id = ?",
+        (app_id, user_id),
+    ).fetchone()
+
+
 @app.route("/")
 def home():
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
     return redirect(url_for("login"))
 
 
-## Get the input create account data saves it in variables to be used in table
-###Login
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
+
     if request.method == "POST":
-        username_or_email = request.form.get("username","").strip()
+        username_or_email = request.form.get("username", "").strip()
         password = request.form.get("password", "")
 
         conn = get_db_connection()
-
-        #try the exact username match first
         user = conn.execute(
             "SELECT * FROM users WHERE username = ?",
-            (username_or_email,)
+            (username_or_email,),
         ).fetchone()
 
-        # if no username mathc, see if lowercase email matches
         if not user:
             user = conn.execute(
                 "SELECT * FROM users WHERE email = ?",
-                (username_or_email.lower(),)
+                (username_or_email.lower(),),
             ).fetchone()
 
         conn.close()
@@ -86,26 +199,33 @@ def login():
         if user and check_password_hash(user["password_hash"], password):
             session["user_id"] = user["user_ID"]
             session["username"] = user["username"]
-            flash("Login sucessful.")
+            flash("Login successful.")
             return redirect(url_for("dashboard"))
-        else:
-            flash("Invalid username/email or password.")
-            return render_template("login.html")
+
+        flash("Invalid username/email or password.")
+
     return render_template("login.html")
 
 
+@app.route("/logout")
+@login_required
+def logout():
+    session.clear()
+    flash("You have been logged out.")
+    return redirect(url_for("login"))
 
-###Register Route
 
-@app.route("/register", methods=["GET","POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == "POST":
-        username = request.form.get("username","").strip()
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password","")
-        confirm = request.form.get("confirm_password","")
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
 
-        #1) validation
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
         if not username or not email or not password or not confirm:
             flash("All fields are required.")
             return render_template("register.html")
@@ -114,64 +234,191 @@ def register():
             flash("Passwords do not match.")
             return render_template("register.html")
 
-        if len(password)< 8:
+        if len(password) < 8:
             flash("Password must be at least 8 characters.")
             return render_template("register.html")
 
-        #2) Check if the username/email exists
         conn = get_db_connection()
         existing = conn.execute(
-            "SELECT * FROM users WHERE username = ? OR email = ?",(username,email)
-            ).fetchone()
+            "SELECT * FROM users WHERE username = ? OR email = ?",
+            (username, email),
+        ).fetchone()
 
         if existing:
             conn.close()
             flash("Username or email already exists.")
             return render_template("register.html")
 
-        #3) Hash password and store user
         password_hash = generate_password_hash(password)
-
-        #) Insert Input into users Table in SQlite
         conn.execute(
-            "INSERT INTO users (username,email,password_hash) VALUES (?, ?, ?)",
-            (username, email, password_hash)
-            )
-            
+            "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+            (username, email, password_hash),
+        )
         conn.commit()
         conn.close()
 
         flash("Account created! Please log in.")
-        return redirect(url_for("login")) #change to redirect to Login when created:DONE!
-    
+        return redirect(url_for("login"))
+
     return render_template("register.html")
 
-### Dashboard Route
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    dev_reset_code = None
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+
+        if not email:
+            flash("Please enter your email address.")
+            return render_template("forgot_password.html")
+
+        conn = get_db_connection()
+        user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+        if user:
+            code = f"{random.randint(0, 999999):06d}"
+            expires_at = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
+            conn.execute(
+                """
+                UPDATE users
+                SET reset_code_hash = ?, reset_code_expiry = ?
+                WHERE user_ID = ?
+                """,
+                (generate_password_hash(code), expires_at, user["user_ID"]),
+            )
+            conn.commit()
+            email_sent, send_error = send_reset_code_email(email, code)
+            if not email_sent:
+                dev_reset_code = code
+                flash(
+                    "Code generated. Email is not configured yet, so the code is shown below for local testing."
+                )
+            else:
+                flash("A 6-digit reset code has been sent to your email.")
+        else:
+            flash("If that email exists, a 6-digit reset code has been sent.")
+
+        conn.close()
+        return render_template(
+            "forgot_password.html",
+            email=email,
+            dev_reset_code=dev_reset_code,
+        )
+
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    email = request.args.get("email", request.form.get("email", "")).strip().lower()
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        code = request.form.get("code", "").strip()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+        if not email or not code or not password or not confirm:
+            flash("All fields are required.")
+            return render_template("reset_password.html", email=email)
+
+        if password != confirm:
+            flash("Passwords do not match.")
+            return render_template("reset_password.html", email=email)
+
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.")
+            return render_template("reset_password.html", email=email)
+
+        conn = get_db_connection()
+        user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+        if not user or not user["reset_code_hash"] or not user["reset_code_expiry"]:
+            conn.close()
+            flash("Invalid or expired reset code.")
+            return render_template("reset_password.html", email=email)
+
+        try:
+            expires_at = datetime.fromisoformat(user["reset_code_expiry"])
+        except ValueError:
+            expires_at = datetime.utcnow() - timedelta(seconds=1)
+
+        if expires_at < datetime.utcnow():
+            conn.execute(
+                "UPDATE users SET reset_code_hash = NULL, reset_code_expiry = NULL WHERE user_ID = ?",
+                (user["user_ID"],),
+            )
+            conn.commit()
+            conn.close()
+            flash("That reset code has expired. Please request a new one.")
+            return redirect(url_for("forgot_password"))
+
+        if not check_password_hash(user["reset_code_hash"], code):
+            conn.close()
+            flash("Invalid or expired reset code.")
+            return render_template("reset_password.html", email=email)
+
+        conn.execute(
+            """
+            UPDATE users
+            SET password_hash = ?, reset_code_hash = NULL, reset_code_expiry = NULL
+            WHERE user_ID = ?
+            """,
+            (generate_password_hash(password), user["user_ID"]),
+        )
+        conn.commit()
+        conn.close()
+
+        flash("Password reset successful. Please log in.")
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html", email=email)
+
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
+    user_id = session["user_id"]
     conn = get_db_connection()
-    applications = conn.execute("SELECT * FROM applications ORDER BY id DESC").fetchall()
 
-    total = conn.execute("SELECT COUNT(*) FROM applications").fetchone()[0]
-    applied = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Applied'").fetchone()[0]
-    interview = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Interview'").fetchone()[0]
-    offer = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Offer'").fetchone()[0]
-    rejected = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Rejected'").fetchone()[0]
-    waiting = conn.execute("SELECT COUNT(*) FROM applications WHERE status='Applied'").fetchone()[0]
-    
-    today=date.today()
-    start_of_week =today - timedelta(days=today.weekday())
+    applications = conn.execute(
+        "SELECT * FROM applications WHERE user_id = ? ORDER BY id DESC",
+        (user_id,),
+    ).fetchall()
+
+    total = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()[0]
+    interview = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status='Interview'",
+        (user_id,),
+    ).fetchone()[0]
+    offer = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status='Offer'",
+        (user_id,),
+    ).fetchone()[0]
+    rejected = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status='Rejected'",
+        (user_id,),
+    ).fetchone()[0]
+    waiting = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status='Applied'",
+        (user_id,),
+    ).fetchone()[0]
+
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())
     start_of_week_str = start_of_week.isoformat()
 
     applied_this_week = conn.execute(
-        "SELECT COUNT(*) FROM applications WHERE apply_date >= ?",
-        (start_of_week_str,)
+        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND apply_date >= ?",
+        (user_id, start_of_week_str),
     ).fetchone()[0]
 
-    #Reminder Messages
     reminder_messages = []
-
     if interview > 0:
         reminder_messages.append("Remember to follow up within 2-3 days after your interview.")
     if offer > 0:
@@ -183,15 +430,19 @@ def dashboard():
     if total == 0:
         reminder_messages.append("Start adding applications to begin tracking your progress.")
 
-    weekly_data_rows = conn.execute("""
+    weekly_data_rows = conn.execute(
+        """
         SELECT
-            strftime('%m', apply_date) as month_num,
-            CAST(((CAST(strftime('%d', apply_date) AS INTEGER) - 1) / 7) + 1 AS INTEGER) as week_of_month,
-            COUNT(*) as count
+            strftime('%m', apply_date) AS month_num,
+            CAST(((CAST(strftime('%d', apply_date) AS INTEGER) - 1) / 7) + 1 AS INTEGER) AS week_of_month,
+            COUNT(*) AS count
         FROM applications
+        WHERE user_id = ? AND apply_date IS NOT NULL AND apply_date != ''
         GROUP BY month_num, week_of_month
         ORDER BY month_num, week_of_month
-    """).fetchall()
+        """,
+        (user_id,),
+    ).fetchall()
 
     month_names = {
         "01": "January",
@@ -208,13 +459,13 @@ def dashboard():
         "12": "December",
     }
 
-    weekly_data = []
-
-    for row in weekly_data_rows:
-        weekly_data.append({
-            "label": f"{month_names[row['month_num']]} Week {row['week_of_month']}",
-            "count": row["count"]
-        })
+    weekly_data = [
+        {
+            "label": f"{month_names.get(row['month_num'], row['month_num'])} Week {row['week_of_month']}",
+            "count": row["count"],
+        }
+        for row in weekly_data_rows
+    ]
 
     conn.close()
 
@@ -222,84 +473,110 @@ def dashboard():
         "dashboard.html",
         applications=applications,
         total=total,
-        applied=applied,
         interview=interview,
         offer=offer,
         rejected=rejected,
         waiting=waiting,
         applied_this_week=applied_this_week,
         weekly_data=weekly_data,
-        reminder_messages=reminder_messages
+        reminder_messages=reminder_messages,
     )
 
-## View Applications
+
 @app.route("/applications")
+@login_required
 def view_app():
     conn = get_db_connection()
-    applications = conn.execute("SELECT * FROM applications ORDER BY id DESC").fetchall()
+    applications = conn.execute(
+        "SELECT * FROM applications WHERE user_id = ? ORDER BY id DESC",
+        (session["user_id"],),
+    ).fetchall()
     conn.close()
-
     return render_template("view_app.html", applications=applications)
 
-## Add Application Route
 
 @app.route("/add", methods=["GET", "POST"])
+@login_required
 def add_application():
     if request.method == "POST":
-        company = request.form["company"].strip()
-        job_title = request.form["job_title"].strip()
-        location = request.form["location"].strip()
-        status = request.form["status"].strip()
-        apply_date = request.form["apply_date"].strip()
+        company = request.form.get("company", "").strip()
+        job_title = request.form.get("job_title", "").strip()
+        location = request.form.get("location", "").strip()
+        status = request.form.get("status", "").strip()
+        apply_date = request.form.get("apply_date", "").strip()
+
+        if not company or not job_title or not location or not status or not apply_date:
+            flash("All application fields are required.")
+            return render_template("add_application.html")
 
         conn = get_db_connection()
         conn.execute(
-            "INSERT INTO applications (company, job_title, location, status, apply_date) VALUES (?, ?, ?, ?, ?)",
-            (company, job_title, location, status, apply_date)
+            """
+            INSERT INTO applications (company, job_title, location, status, apply_date, user_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (company, job_title, location, status, apply_date, session["user_id"]),
         )
         conn.commit()
         conn.close()
 
-        # ✅ After saving, go back to dashboard (Issue #78 behavior)
+        flash("Application added successfully.")
         return redirect(url_for("view_app"))
 
     return render_template("add_application.html")
 
-## Edit Application Route
 
-@app.route("/edit/<int:id>", methods=["GET", "POST"])
-def edit_application(id):
+@app.route("/edit/<int:app_id>", methods=["GET", "POST"])
+@login_required
+def edit_application(app_id):
     conn = get_db_connection()
-    application = conn.execute("SELECT * FROM applications WHERE id=?", (id,)).fetchone()
+    application = get_current_user_application(conn, app_id, session["user_id"])
+
+    if not application:
+        conn.close()
+        flash("Application not found.")
+        return redirect(url_for("view_app"))
 
     if request.method == "POST":
-        company = request.form["company"].strip()
-        job_title = request.form["job_title"].strip()
-        location = request.form["location"].strip()
-        status = request.form["status"].strip()
-        apply_date = request.form["apply_date"].strip()
+        company = request.form.get("company", "").strip()
+        job_title = request.form.get("job_title", "").strip()
+        location = request.form.get("location", "").strip()
+        status = request.form.get("status", "").strip()
+        apply_date = request.form.get("apply_date", "").strip()
 
-        conn.execute("""
+        if not company or not job_title or not location or not status or not apply_date:
+            conn.close()
+            flash("All application fields are required.")
+            return render_template("edit_application.html", application=application)
+
+        conn.execute(
+            """
             UPDATE applications
-            SET company=?, job_title=?, location=?, status=?, apply_date=?
-            WHERE id=?
-        """, (company, job_title, location, status, apply_date, id))
+            SET company = ?, job_title = ?, location = ?, status = ?, apply_date = ?
+            WHERE id = ? AND user_id = ?
+            """,
+            (company, job_title, location, status, apply_date, app_id, session["user_id"]),
+        )
         conn.commit()
         conn.close()
-
-        return redirect(url_for("dashboard"))
+        flash("Application updated successfully.")
+        return redirect(url_for("view_app"))
 
     conn.close()
     return render_template("edit_application.html", application=application)
 
-## Delete Application Route
 
-@app.route("/delete/<int:id>", methods=["POST"])
-def delete_application(id):
+@app.route("/delete/<int:app_id>", methods=["POST"])
+@login_required
+def delete_application(app_id):
     conn = get_db_connection()
-    conn.execute("DELETE FROM applications WHERE id=?", (id,))
+    conn.execute(
+        "DELETE FROM applications WHERE id = ? AND user_id = ?",
+        (app_id, session["user_id"]),
+    )
     conn.commit()
     conn.close()
+    flash("Application deleted.")
     return redirect(url_for("view_app"))
 
 
