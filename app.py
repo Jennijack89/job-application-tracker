@@ -1,27 +1,28 @@
 # JobAppTrack
-#CPSC 4205 - IT CapStone Project
-#Spring Semester 2026
-# Jennifer, Honey, Tyree,Zion
-
-# Import Flask items, SQlite, and Hashing
+# CPSC 4205 - IT CapStone Project
+# Spring Semester 2026
+# Jennifer, Honey, Tyree, Zion
 
 import os
-import smtplib
-import sqlite3
 import random
 import smtplib
-from email.mime.text import MIMEText
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USERNAME = "patelhoney1209@gmail.com"
-SMTP_PASSWORD = "gbhqxuctnvftxxps"
-EMAIL_FROM = "patelhoney1209@gmail.com"
-SMTP_USE_TLS = True
+import sqlite3
 from datetime import date, datetime, timedelta
 from email.message import EmailMessage
 from functools import wraps
+from io import BytesIO
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+    send_file,
+)
+from openpyxl import Workbook
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -29,27 +30,15 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-this")
 
 DB_NAME = "database/app.db"
 
+# Safer SMTP config
+SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
+SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+EMAIL_FROM = os.environ.get("EMAIL_FROM", SMTP_USERNAME)
+SMTP_USE_TLS = True
 
 
-def send_reset_code(to_email, code):
-    subject = "Password Reset Code"
-    body = f"Your password reset code is: {code}\n\nThis code expires in 15 minutes."
-
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = EMAIL_FROM
-    msg["To"] = to_email
-
-    try:
-        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
-        server.starttls()
-        server.login(SMTP_USERNAME, SMTP_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        print("Email sent successfully")
-    except Exception as e:
-        print("Email failed:", e)
-        
 def get_db_connection():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
@@ -96,7 +85,7 @@ def init_db():
         """
     )
 
-    # Backfill older project databases safely.
+    # Backfill old databases safely
     ensure_column(conn, "users", "reset_code_hash", "TEXT")
     ensure_column(conn, "users", "reset_code_expiry", "TEXT")
 
@@ -120,7 +109,6 @@ def login_required(func):
             flash("Please log in first.")
             return redirect(url_for("login"))
         return func(*args, **kwargs)
-
     return wrapper
 
 
@@ -289,6 +277,7 @@ def forgot_password():
                 (generate_password_hash(code), expires_at, user["user_ID"]),
             )
             conn.commit()
+
             email_sent, send_error = send_reset_code_email(email, code)
             if not email_sent:
                 dev_reset_code = code
@@ -392,20 +381,24 @@ def dashboard():
         "SELECT COUNT(*) FROM applications WHERE user_id = ?",
         (user_id,),
     ).fetchone()[0]
+
     interview = conn.execute(
-        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status='Interview'",
+        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status = 'Interview'",
         (user_id,),
     ).fetchone()[0]
+
     offer = conn.execute(
-        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status='Offer'",
+        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status = 'Offer'",
         (user_id,),
     ).fetchone()[0]
+
     rejected = conn.execute(
-        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status='Rejected'",
+        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status = 'Rejected'",
         (user_id,),
     ).fetchone()[0]
+
     waiting = conn.execute(
-        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status='Applied'",
+        "SELECT COUNT(*) FROM applications WHERE user_id = ? AND status = 'Applied'",
         (user_id,),
     ).fetchone()[0]
 
@@ -486,28 +479,151 @@ def dashboard():
 @app.route("/applications")
 @login_required
 def view_app():
+    search = request.args.get("search", "").strip()
+    status_filter = request.args.get("status", "").strip()
+    sort = request.args.get("sort", "").strip()
+
+    query = """
+        SELECT * FROM applications
+        WHERE user_id = ?
+    """
+    params = [session["user_id"]]
+
+    if search:
+        query += " AND (company LIKE ? OR job_title LIKE ? OR location LIKE ?)"
+        like_value = f"%{search}%"
+        params.extend([like_value, like_value, like_value])
+
+    if status_filter:
+        query += " AND status = ?"
+        params.append(status_filter)
+
+    if sort == "company":
+        query += " ORDER BY company COLLATE NOCASE ASC"
+    elif sort == "date_asc":
+        query += " ORDER BY apply_date ASC"
+    elif sort == "date_desc":
+        query += " ORDER BY apply_date DESC"
+    elif sort == "status":
+        query += " ORDER BY status COLLATE NOCASE ASC"
+    else:
+        query += " ORDER BY id DESC"
+
     conn = get_db_connection()
-    applications = conn.execute(
-        "SELECT * FROM applications WHERE user_id = ? ORDER BY id DESC",
-        (session["user_id"],),
-    ).fetchall()
+    applications = conn.execute(query, params).fetchall()
     conn.close()
-    return render_template("view_app.html", applications=applications)
+
+    return render_template(
+        "view_app.html",
+        applications=applications,
+        search=search,
+        status_filter=status_filter,
+        sort=sort,
+    )
+
+
+@app.route("/applications/export")
+@login_required
+def export_applications():
+    search = request.args.get("search", "").strip()
+    status_filter = request.args.get("status", "").strip()
+    sort = request.args.get("sort", "").strip()
+
+    query = """
+        SELECT company, job_title, location, status, apply_date
+        FROM applications
+        WHERE user_id = ?
+    """
+    params = [session["user_id"]]
+
+    if search:
+        query += " AND (company LIKE ? OR job_title LIKE ? OR location LIKE ?)"
+        like_value = f"%{search}%"
+        params.extend([like_value, like_value, like_value])
+
+    if status_filter:
+        query += " AND status = ?"
+        params.append(status_filter)
+
+    if sort == "company":
+        query += " ORDER BY company COLLATE NOCASE ASC"
+    elif sort == "date_asc":
+        query += " ORDER BY apply_date ASC"
+    elif sort == "date_desc":
+        query += " ORDER BY apply_date DESC"
+    elif sort == "status":
+        query += " ORDER BY status COLLATE NOCASE ASC"
+    else:
+        query += " ORDER BY id DESC"
+
+    conn = get_db_connection()
+    applications = conn.execute(query, params).fetchall()
+    conn.close()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Applications"
+
+    headers = ["Company", "Job Title", "Location", "Status", "Application Date"]
+    ws.append(headers)
+
+    for row in applications:
+        ws.append([
+            row["company"],
+            row["job_title"],
+            row["location"],
+            row["status"],
+            row["apply_date"],
+        ])
+
+    for column in ws.columns:
+        max_length = 0
+        col_letter = column[0].column_letter
+        for cell in column:
+            value = "" if cell.value is None else str(cell.value)
+            if len(value) > max_length:
+                max_length = len(value)
+        ws.column_dimensions[col_letter].width = max_length + 2
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="job_applications.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
 
 @app.route("/add", methods=["GET", "POST"])
 @login_required
 def add_application():
-    if request.method == "POST":
-        company = request.form.get("company", "").strip()
-        job_title = request.form.get("job_title", "").strip()
-        location = request.form.get("location", "").strip()
-        status = request.form.get("status", "").strip()
-        apply_date = request.form.get("apply_date", "").strip()
+    form_data = {
+        "company": "",
+        "job_title": "",
+        "location": "",
+        "status": "",
+        "apply_date": "",
+    }
 
-        if not company or not job_title or not location or not status or not apply_date:
+    if request.method == "POST":
+        form_data["company"] = request.form.get("company", "").strip()
+        form_data["job_title"] = request.form.get("job_title", "").strip()
+        form_data["location"] = request.form.get("location", "").strip()
+        form_data["status"] = request.form.get("status", "").strip()
+        form_data["apply_date"] = request.form.get("apply_date", "").strip()
+
+        if (
+            not form_data["company"]
+            or not form_data["job_title"]
+            or not form_data["location"]
+            or not form_data["status"]
+            or not form_data["apply_date"]
+        ):
             flash("All application fields are required.")
-            return render_template("add_application.html")
+            return render_template("add_application.html", form_data=form_data)
 
         conn = get_db_connection()
         conn.execute(
@@ -515,7 +631,14 @@ def add_application():
             INSERT INTO applications (company, job_title, location, status, apply_date, user_id)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (company, job_title, location, status, apply_date, session["user_id"]),
+            (
+                form_data["company"],
+                form_data["job_title"],
+                form_data["location"],
+                form_data["status"],
+                form_data["apply_date"],
+                session["user_id"],
+            ),
         )
         conn.commit()
         conn.close()
@@ -523,7 +646,7 @@ def add_application():
         flash("Application added successfully.")
         return redirect(url_for("view_app"))
 
-    return render_template("add_application.html")
+    return render_template("add_application.html", form_data=form_data)
 
 
 @app.route("/edit/<int:app_id>", methods=["GET", "POST"])
@@ -559,6 +682,7 @@ def edit_application(app_id):
         )
         conn.commit()
         conn.close()
+
         flash("Application updated successfully.")
         return redirect(url_for("view_app"))
 
@@ -576,6 +700,7 @@ def delete_application(app_id):
     )
     conn.commit()
     conn.close()
+
     flash("Application deleted.")
     return redirect(url_for("view_app"))
 

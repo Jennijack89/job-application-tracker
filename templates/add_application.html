@@ -3,37 +3,73 @@
 {% block title %}Add Application{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <div class="mx-auto" style="max-width: 700px; background:#fff; padding: 30px; border-radius: 12px;">
-    <h1 class="mb-4">Add New Application</h1>
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Add Application</h2>
 
-    <a class="btn btn-secondary mb-3" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="company" class="form-label">Company</label>
+            <input
+                type="text"
+                id="company"
+                name="company"
+                class="form-control"
+                value="{{ form_data.company if form_data else '' }}"
+                required
+            >
+        </div>
 
-    <form method="POST" action="{{ url_for('add_application') }}">
-      <label class="form-label">Company</label>
-      <input name="company" type="text" class="form-control" required>
+        <div class="mb-3">
+            <label for="job_title" class="form-label">Job Title</label>
+            <input
+                type="text"
+                id="job_title"
+                name="job_title"
+                class="form-control"
+                value="{{ form_data.job_title if form_data else '' }}"
+                required
+            >
+        </div>
 
-      <label class="form-label mt-3">Job Title</label>
-      <input name="job_title" type="text" class="form-control" required>
+        <div class="mb-3">
+            <label for="location" class="form-label">Location</label>
+            <input
+                type="text"
+                id="location"
+                name="location"
+                class="form-control"
+                value="{{ form_data.location if form_data else '' }}"
+                required
+            >
+        </div>
 
-      <label class="form-label mt-3">Location</label>
-      <input name="location" type="text" class="form-control" required>
+        <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select id="status" name="status" class="form-select" required>
+                <option value="">Select Status</option>
+                <option value="Applied" {% if form_data and form_data.status == 'Applied' %}selected{% endif %}>Applied</option>
+                <option value="Interview" {% if form_data and form_data.status == 'Interview' %}selected{% endif %}>Interview</option>
+                <option value="Rejected" {% if form_data and form_data.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                <option value="Offer" {% if form_data and form_data.status == 'Offer' %}selected{% endif %}>Offer</option>
+            </select>
+        </div>
 
-      <label class="form-label mt-3">Status</label>
-      <select name="status" class="form-control">
-        <option value="Applied">Applied</option>
-        <option value="Interview">Interview</option>
-        <option value="Offer">Offer</option>
-        <option value="Rejected">Rejected</option>
-      </select>
+        <div class="mb-3">
+            <label for="apply_date" class="form-label">Application Date</label>
+            <input
+                type="date"
+                id="apply_date"
+                name="apply_date"
+                class="form-control"
+                value="{{ form_data.apply_date if form_data else '' }}"
+                required
+            >
+        </div>
 
-      <label class="form-label mt-3">Date</label>
-      <input name="apply_date" type="date" class="form-control" required>
-
-      <div class="mt-4">
-        <button class="btn btn-primary" type="submit">Save</button>
-      </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save Application</button>
+            <a href="{{ url_for('view_app') }}" class="btn btn-secondary">Back</a>
+        </div>
     </form>
-  </div>
 </div>
 {% endblock %}

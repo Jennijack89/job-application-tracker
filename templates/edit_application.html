@@ -3,37 +3,72 @@
 {% block title %}Edit Application{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <div class="mx-auto" style="max-width: 700px; background:#fff; padding: 30px; border-radius: 12px;">
-    <h1 class="mb-4">Edit Application</h1>
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Edit Application</h2>
 
-    <a class="btn btn-secondary mb-3" href="{{ url_for('view_app') }}">Back to Applications</a>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="company" class="form-label">Company</label>
+            <input
+                type="text"
+                id="company"
+                name="company"
+                class="form-control"
+                value="{{ application.company }}"
+                required
+            >
+        </div>
 
-    <form method="POST" action="{{ url_for('edit_application', app_id=application['id']) }}">
-      <label class="form-label">Company</label>
-      <input name="company" type="text" class="form-control" value="{{ application['company'] }}" required>
+        <div class="mb-3">
+            <label for="job_title" class="form-label">Job Title</label>
+            <input
+                type="text"
+                id="job_title"
+                name="job_title"
+                class="form-control"
+                value="{{ application.job_title }}"
+                required
+            >
+        </div>
 
-      <label class="form-label mt-3">Job Title</label>
-      <input name="job_title" type="text" class="form-control" value="{{ application['job_title'] }}" required>
+        <div class="mb-3">
+            <label for="location" class="form-label">Location</label>
+            <input
+                type="text"
+                id="location"
+                name="location"
+                class="form-control"
+                value="{{ application.location }}"
+                required
+            >
+        </div>
 
-      <label class="form-label mt-3">Location</label>
-      <input name="location" type="text" class="form-control" value="{{ application['location'] }}" required>
+        <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select id="status" name="status" class="form-select" required>
+                <option value="Applied" {% if application.status == 'Applied' %}selected{% endif %}>Applied</option>
+                <option value="Interview" {% if application.status == 'Interview' %}selected{% endif %}>Interview</option>
+                <option value="Rejected" {% if application.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                <option value="Offer" {% if application.status == 'Offer' %}selected{% endif %}>Offer</option>
+            </select>
+        </div>
 
-      <label class="form-label mt-3">Status</label>
-      <select name="status" class="form-control">
-        <option value="Applied" {% if application['status'] == 'Applied' %}selected{% endif %}>Applied</option>
-        <option value="Interview" {% if application['status'] == 'Interview' %}selected{% endif %}>Interview</option>
-        <option value="Offer" {% if application['status'] == 'Offer' %}selected{% endif %}>Offer</option>
-        <option value="Rejected" {% if application['status'] == 'Rejected' %}selected{% endif %}>Rejected</option>
-      </select>
+        <div class="mb-3">
+            <label for="apply_date" class="form-label">Application Date</label>
+            <input
+                type="date"
+                id="apply_date"
+                name="apply_date"
+                class="form-control"
+                value="{{ application.apply_date }}"
+                required
+            >
+        </div>
 
-      <label class="form-label mt-3">Date</label>
-      <input name="apply_date" type="date" class="form-control" value="{{ application['apply_date'] }}" required>
-
-      <div class="mt-4">
-        <button class="btn btn-primary" type="submit">Update</button>
-      </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Update Application</button>
+            <a href="{{ url_for('view_app') }}" class="btn btn-secondary">Cancel</a>
+        </div>
     </form>
-  </div>
 </div>
 {% endblock %}
